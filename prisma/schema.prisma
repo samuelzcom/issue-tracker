@@ -1,0 +1,310 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Affiliate {
+  id                  Int             @id @default(autoincrement())
+  score               Int?
+  status              AffiliateStatus
+  chauffeurId         Int
+  minimum_per_km_rate Decimal?
+  minimum_total_rate  Decimal?
+  created_at          DateTime        @default(now())
+  updated_at          DateTime
+  Chauffeur           Chauffeur       @relation(fields: [chauffeurId], references: [id])
+  Contact             Contact[]
+  Reservation         Reservation[]
+  Vehicle             Vehicle[]
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+  User                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+model Chauffeur {
+  id          Int           @id @default(autoincrement())
+  contactId   Int
+  score       Int?
+  created_at  DateTime      @default(now())
+  updated_at  DateTime
+  Affiliate   Affiliate[]
+  Contact     Contact       @relation(fields: [contactId], references: [id])
+  Reservation Reservation[]
+}
+
+model Communication {
+  id                  Int                   @id @default(autoincrement())
+  type                CommunicationType
+  message             String
+  contactId           Int?
+  reservations_id     Int?
+  created_at          DateTime              @default(now())
+  updated_at          DateTime
+  Contact             Contact?              @relation(fields: [contactId], references: [id])
+  Reservation         Reservation?          @relation(fields: [reservations_id], references: [id])
+  DataProcessingEntry DataProcessingEntry[]
+}
+
+model CompanyAccount {
+  id          Int       @id @default(autoincrement())
+  name        String
+  industry    String?
+  website     String?
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  postal_code String?
+  country     String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime
+  Contact     Contact[]
+}
+
+model Contact {
+  id                  Int                   @id @default(autoincrement())
+  first_name          String?
+  last_name           String
+  email               String?
+  phone               String?
+  address             String?
+  city                String?
+  postal_code         String?
+  country             String?
+  organization        String?
+  date_of_birth       DateTime?
+  created_at          DateTime              @default(now())
+  updated_at          DateTime
+  accountId           String?
+  affiliateId         Int?
+  customerId          Int?
+  companyAccountId    Int?
+  Chauffeur           Chauffeur[]
+  Communication       Communication[]
+  Affiliate           Affiliate?            @relation(fields: [affiliateId], references: [id])
+  CompanyAccount      CompanyAccount?       @relation(fields: [companyAccountId], references: [id])
+  Customer            Customer?             @relation(fields: [customerId], references: [id])
+  DataProcessingEntry DataProcessingEntry[]
+}
+
+model Customer {
+  id                                                   Int           @id @default(autoincrement())
+  customer_lifetime_value                              Decimal?
+  created_at                                           DateTime      @default(now())
+  updated_at                                           DateTime
+  Contact                                              Contact[]
+  Reservation_Reservation_bookingContactIdToCustomer   Reservation[] @relation("Reservation_bookingContactIdToCustomer")
+  Reservation_Reservation_passengerContactIdToCustomer Reservation[] @relation("Reservation_passengerContactIdToCustomer")
+}
+
+model DataProcessingEntry {
+  id                  Int                        @id @default(autoincrement())
+  communicationId     Int?
+  contact_id          Int?
+  purpose             LegalDataProcessingPurpose
+  legalBasis          LegalDataProcessingBasis
+  timestamp           DateTime                   @default(now())
+  notes               String?
+  dataRetentionPeriod Int?
+  withdrawnAt         DateTime?
+  Communication       Communication?             @relation(fields: [communicationId], references: [id])
+  Contact             Contact?                   @relation(fields: [contact_id], references: [id])
+}
+
+model Link {
+  id         Int      @id @default(autoincrement())
+  slug       String
+  url        String
+  created_at DateTime @default(now())
+  updated_at DateTime
+}
+
+model Reservation {
+  id                                                Int               @id @default(autoincrement())
+  affiliateId                                       Int?
+  bookingContactId                                  Int?
+  chauffeurId                                       Int?
+  drop_off_location                                 String?
+  passengerContactId                                Int?
+  passengers_count                                  Int?
+  pickup_datetime                                   DateTime
+  pickup_location                                   String
+  price_gross                                       Decimal?
+  price_net                                         Decimal?
+  status                                            ReservationStatus @default(PENDING)
+  created_at                                        DateTime          @default(now())
+  updated_at                                        DateTime
+  zohoCrmId                                         Int?              @unique
+  Communication                                     Communication[]
+  Affiliate                                         Affiliate?        @relation(fields: [affiliateId], references: [id])
+  Customer_Reservation_bookingContactIdToCustomer   Customer?         @relation("Reservation_bookingContactIdToCustomer", fields: [bookingContactId], references: [id])
+  Chauffeur                                         Chauffeur?        @relation(fields: [chauffeurId], references: [id])
+  Customer_Reservation_passengerContactIdToCustomer Customer?         @relation("Reservation_passengerContactIdToCustomer", fields: [passengerContactId], references: [id])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String          @id
+  name          String?
+  email         String?         @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  Account       Account[]
+  Authenticator Authenticator[]
+  Session       Session[]
+}
+
+model Vehicle {
+  id                   Int                  @id @default(autoincrement())
+  affiliateId          Int?
+  license_plate        String
+  make_and_model       VehicleMakeAndModel?
+  maximum_passengers   Int?
+  year_of_construction Int?
+  created_at           DateTime             @default(now())
+  updated_at           DateTime
+  Affiliate            Affiliate?           @relation(fields: [affiliateId], references: [id])
+}
+
+model VehiclePricing {
+  id                      Int                   @id @default(autoincrement())
+  price                   Decimal
+  created_at              DateTime              @default(now())
+  updated_at              DateTime
+  booking_vehicle_type    BookingComVehicleType
+  km_factor               Decimal
+  market_name             String
+  maximum_passenger_count Int
+  minimum_price           Int
+  samuelz_vehicle_type    SamuelzVehicleType
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+enum AffiliateStatus {
+  ONBOARDING
+  ACTIVE
+  INACTIVE
+}
+
+enum BookingComVehicleType {
+  STANDARD
+  EXECUTIVE
+  LUXURY
+  ELECTRIC_STANDARD
+  ELECTRIC_LUXURY
+  PEOPLE_CARRIER
+  LARGE_PEOPLE_CARRIER
+  EXECUTIVE_PEOPLE_CARRIER
+}
+
+enum CommunicationType {
+  CALL
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum LegalDataProcessingBasis {
+  CONSENT
+  CONTRACT
+  LEGAL_OBLIGATION
+  VITAL_INTERESTS
+  PUBLIC_TASK
+  LEGITIMATE_INTEREST
+}
+
+enum LegalDataProcessingPurpose {
+  MARKETING
+  TRANSACTION_MANAGEMENT
+  CUSTOMER_SUPPORT
+  CONTRACT_FULFILLMENT
+  LEGAL_COMPLIANCE
+  FRAUD_PREVENTION
+  SECURITY
+  RESEARCH_ANALYTICS
+  PERSONALIZATION
+  SERVICE_IMPROVEMENT
+  HEALTH_SAFETY
+  PUBLIC_INTEREST
+  DATA_STORAGE
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum SamuelzVehicleType {
+  Standard_Class @map("Standard Class")
+  Business_Class @map("Business Class")
+  First_Class    @map("First Class")
+  Electric_Class @map("Electric Class")
+  Standard_Van   @map("Standard Van")
+  Business_Van   @map("Business Van")
+}
+
+enum VehicleMakeAndModel {
+  Audi_A6               @map("Audi A6")
+  Audi_A8               @map("Audi A8")
+  Audi_Q7               @map("Audi Q7")
+  BMW_5_Series          @map("BMW 5 Series")
+  BMW_7_Series          @map("BMW 7 Series")
+  BMW_X5                @map("BMW X5")
+  Mercedes_Benz_E_Class @map("Mercedes-Benz E-Class")
+  Mercedes_Benz_S_Class @map("Mercedes-Benz S-Class")
+  Mercedes_Benz_V_Class @map("Mercedes-Benz V-Class")
+  Volkswagen_Arteon     @map("Volkswagen Arteon")
+}
