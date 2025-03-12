@@ -4,7 +4,11 @@ import { Card, Flex, Heading, Text } from "@radix-ui/themes";
 import { notFound } from "next/navigation";
 import Markdown from "react-markdown";
 
-const IssueDetailPage = async ({ params }: { params: { id: string } }) => {
+const IssueDetailPage = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
   const { id } = await params;
   const issue = await prisma.issue.findUnique({
     where: {
