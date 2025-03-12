@@ -5,9 +5,10 @@ import { notFound } from "next/navigation";
 import Markdown from "react-markdown";
 
 const IssueDetailPage = async ({ params }: { params: { id: string } }) => {
+  const { id } = await params;
   const issue = await prisma.issue.findUnique({
     where: {
-      id: parseInt(params.id),
+      id: parseInt(id),
     },
   });
 
