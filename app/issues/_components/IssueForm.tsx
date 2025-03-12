@@ -13,7 +13,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
-const SimpleMde = dynamic(() => import("react-simplemde-editor"), {
+const SimpleMDE = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
 });
 
@@ -35,7 +35,7 @@ const IssuePage = ({ issue }: { issue?: Issue }) => {
   const onSubmit = handleSubmit(async (data) => {
     try {
       setSubmitting(true);
-      if (issue) axios.patch("/api/issues/" + issue.id, data);
+      if (issue) await axios.patch(`/api/issues/${issue.id}`, data);
       else await axios.post("/api/issues", data);
       router.push("/issues");
       router.refresh();
@@ -65,7 +65,7 @@ const IssuePage = ({ issue }: { issue?: Issue }) => {
           control={control}
           defaultValue={issue?.description}
           render={({ field }) => (
-            <SimpleMde placeholder="Description" {...field} />
+            <SimpleMDE placeholder="Description" {...field} />
           )}
         />
         <ErrorMessage>{errors.description?.message}</ErrorMessage>
