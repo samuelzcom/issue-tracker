@@ -4,6 +4,7 @@ import classNames from "classnames";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AiFillBug } from "react-icons/ai";
+import LoginButton from "./LoginButton";
 
 const NavBar = () => {
   const currentPath = usePathname();
@@ -40,6 +41,7 @@ const NavBar = () => {
           </Link>
         ))}
       </ul>
+      <LoginButton />
     </nav>
   );
 };
