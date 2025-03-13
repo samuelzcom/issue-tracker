@@ -1,5 +1,6 @@
 "use client";
 
+import Skeleton from "@/app/components/Skeleton";
 import {
   Avatar,
   Box,
@@ -53,8 +54,9 @@ const NavLinks = () => {
           <Link
             href={link.href}
             className={classNames({
-              "nav-link": true,
-              "!text-zinc-900": link.href === currentPath,
+              "text-zinc-900": link.href === currentPath,
+              "text-zinc-500": link.href !== currentPath,
+              "hover:text-zinc-800 transition-colors": true,
             })}
           >
             {link.label}
@@ -69,7 +71,7 @@ const AuthStatus = () => {
   const { status, data: session } = useSession();
   console.log(session);
 
-  if (status === "loading") return null;
+  if (status === "loading") return <Skeleton width="3rem" />;
 
   if (status === "unauthenticated")
     return <Link href="/api/auth/signin">Login</Link>;
@@ -91,9 +93,7 @@ const AuthStatus = () => {
             <Text size="2">{session!.user?.email}</Text>
           </DropdownMenu.Label>
           <DropdownMenu.Item>
-            <Link className="nav-link" href="/api/auth/signout">
-              Log out
-            </Link>
+            <Link href="/api/auth/signout">Log out</Link>
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
