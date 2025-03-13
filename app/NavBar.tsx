@@ -93,7 +93,7 @@ const AuthStatus = () => {
             <Text size="2">{session!.user?.email}</Text>
           </DropdownMenu.Label>
           <DropdownMenu.Item>
-            <Link href="/api/auth/signout">Log out</Link>
+            <Link href="/api/auth/signout?callbackUrl=%2F.">Log out</Link>
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
